@@ -974,12 +974,21 @@ void SV_StudioSetupBones(model_t *pModel, float frame, int sequence, const vec_t
 	mstudiobone_t *pbones;
 	mstudioseqdesc_t *pseqdesc;
 	mstudioanim_t *panim;
+	CBasePlayer* pPlayer;
 	float bonematrix[3][4];
 	vec3_t temp_angles;
 
 	static float pos[MAXSTUDIOBONES][3] = {}, pos2[MAXSTUDIOBONES][3] = {};
 	static float q[MAXSTUDIOBONES][4] = {}, q2[MAXSTUDIOBONES][4] = {};
 
+	if (CBaseEntity::Instance(const_cast<edict_t*>(pEdict))->IsPlayer())
+	{
+		pPlayer = GET_PRIVATE<CBasePlayer>(const_cast<edict_t*>(pEdict));
+	}
+	else
+	{
+		pPlayer = nullptr;
+	}
 	g_pstudiohdr = (studiohdr_t *)IEngineStudio.Mod_Extradata(pModel);
 
 	// Bound sequence number
@@ -1006,8 +1015,33 @@ void SV_StudioSetupBones(model_t *pModel, float frame, int sequence, const vec_t
 		for (i = iBone; i != -1; i = pbones[i].parent)
 			chain[chainlength++] = i;
 	}
+	if (pPlayer)
+	{
+		if (pPlayer->m_iGaitsequence == ANIM_JUMP_SEQUENCE)
+		{
+			pPlayer->m_flGaitframe = 0;
+		}
+	}
 
 	f = StudioEstimateFrame(frame, pseqdesc);
+
+	if (pPlayer)
+	{
+		if (pPlayer->m_iGaitsequence == ANIM_WALK_SEQUENCE)
+		{
+			if (pblending[0] > 26)
+			{
+				((vec_t*)(pblending))[0] -= 26;
+				pPlayer->m_flYaw = pblending[0];
+			}
+			else
+			{
+				((vec_t*)(pblending))[0] = 0;
+				pPlayer->m_flYaw = pblending[0];
+			}
+		}
+	}
+
 	subframe = int(f);
 	f -= subframe;
 
@@ -1124,7 +1158,7 @@ void SV_StudioSetupBones(model_t *pModel, float frame, int sequence, const vec_t
 		StudioSlerpBones(q, pos, q3, pos3, t);
 	}
 
-	if (pseqdesc->numblends == 9 && sequence < ANIM_FIRST_DEATH_SEQUENCE && sequence != ANIM_SWIM_1 && sequence != ANIM_SWIM_2)
+	if (pPlayer && sequence < ANIM_FIRST_DEATH_SEQUENCE && sequence != ANIM_SWIM_1 && sequence != ANIM_SWIM_2)
 	{
 		bool bCopy = true;
 		int gaitsequence = GetPlayerGaitsequence(pEdict);	// calc gait animation
@@ -1160,7 +1194,7 @@ void SV_StudioSetupBones(model_t *pModel, float frame, int sequence, const vec_t
 #ifndef REGAMEDLL_FIXES
 	if (pEdict)
 #else
-	if (pEdict && CBaseEntity::Instance(const_cast<edict_t *>(pEdict))->IsPlayer())
+	if (pPlayer)
 #endif
 	{
 		temp_angles[1] = UTIL_GetPlayerGaitYaw(ENTINDEX(pEdict));
