@@ -8615,7 +8615,7 @@ void CBasePlayer::CalculateYawBlend()
 	}
 
 	blend_yaw = (flYaw / 90.0) * 128.0 + 127.0;
-	blend_yaw = clamp(blend_yaw, 0.0f, 255.0f);
+	blend_yaw = clamp<real_t>(blend_yaw, 0.0f, 255.0f);
 	blend_yaw = 255.0 - blend_yaw;
 
 	pev->blending[0] = int(blend_yaw);
