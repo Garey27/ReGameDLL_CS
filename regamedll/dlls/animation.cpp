@@ -1076,15 +1076,13 @@ void SV_StudioSetupBones(model_t* pModel, float frame, int sequence, const vec_t
 	{
 		if (pPlayer->m_iGaitsequence == ANIM_WALK_SEQUENCE)
 		{
-			if (pblending[0] > 26)
+			if (pPlayer->m_flYaw > 26)
 			{
-				((vec_t*)(pblending))[0] -= 26;
-				pPlayer->m_flYaw = pblending[0];
+				pPlayer->m_flYaw -= 26;
 			}
 			else
 			{
-				((vec_t*)(pblending))[0] = 0;
-				pPlayer->m_flYaw = pblending[0];
+				pPlayer->m_flYaw = 0;
 			}
 		}
 	}
